@@ -88,7 +88,7 @@
 % koniec definicji
 
 \begin{document}
-\maketitle 
+\maketitle
 
 %tu idzie streszczenie na strone poczatkowa
 \begin{abstract}
@@ -101,17 +101,30 @@
 
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
-Deep learning applications require complex, multi-stage data processing pipelines that include loading, decoding, cropping, resizing, and many other augmentations. These data processing pipelines, which are currently executed on the CPU, have become a bottleneck, limiting the performance and scalability of training and inference. To address this bottleneck, The NVIDIA Data Loading Library (DALI) was conceived with a goal of offloading data loading and prepossessing to the GPU. \\
-
-Nevertheless, in the case of more unusual data formats such as FITS, which is a standard for space observation data, there are currently no solutions that would alleviate this bottleneck by harnessing GPU acceleration. One of the main problems that riddles FITS data format use case in  machine learning is the widespread utilization of rather nonstandard RICE compression. This coding method became a standard as it well suited for running on FPGAs used onboard satellites, although less performant on more mainstream hardware architectures compared to alternative data compression methods. \\ 
-That's why, motivated by a growing number of deep learning applications trained on images of space, our team approached the nontrivial problem of massive GPU parallelization of RICE coding and its implementation in the DALI library.  
-
-
+Data compression is a widely utilized technique for reducing the storage requirements and 
+transmission time for large data sets. However, when it comes to training deep learning models, 
+the decompression of compressed data can create a bottleneck in the machine learning pipeline, particularly
+when dealing with specialized data formats such as astronomy and medicine that employ custom compression 
+algorithms that can be computationally expensive to decompress.One such specialized compression algorithm is RICE coding,
+which is widely used in the FITS data format in astronomy. To address this bottleneck, 
+utilizing Graphics Processing Units (GPUs) and parallelization techniques have emerged as promising solutions
+for accelerating the decompression of large data sets by leveraging the parallel processing capabilities of GPUs. 
+While established solutions for mainstream lossless compression algorithms like JPEG-2000 exist, 
+this paper aims to investigate the potential of GPU acceleration and parallelization
+in enhancing the performance of RICE coding, a specialized and niche compression algorithm.
 
 
 \chapter{Key terms}\label{r:pojecia}
 
 \section{FITS}
+The Flexible Image Transport System (FITS) format is a digital file format that is commonly
+ utilized in the field of astronomy for storing and transferring scientific data. FITS files 
+ typically contain images, data cubes, and tables of observational data, as well as associated metadata. 
+ One of the key characteristics of FITS is its ability to store multiple data arrays in a single file, which 
+ allows for the efficient storage and transfer of large data sets. The FITS format is an open standard 
+ and is supported by a wide range of software and data analysis tools. However, the FITS format is also 
+ known for its large file size, which can present challenges when working with large data sets.
+  As a result, compression algorithms such as RICE compression are often applied to the data before storing in the FITS format.
 
 \section{RICE}
 
@@ -126,10 +139,10 @@ That's why, motivated by a growing number of deep learning applications trained 
 
 
 \begin{thebibliography}{99}
-\addcontentsline{toc}{chapter}{Bibliography}
+    \addcontentsline{toc}{chapter}{Bibliography}
 
-\bibitem[Bea65]{beaman} Juliusz Beaman, \textit{Morbidity of the Jolly
-    function}, Mathematica Absurdica, 117 (1965) 338--9.
+    \bibitem[Bea65]{beaman} Juliusz Beaman, \textit{Morbidity of the Jolly
+        function}, Mathematica Absurdica, 117 (1965) 338--9.
 
 
 \end{thebibliography}
