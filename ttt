@@ -1,0 +1,10 @@
+Data compression is a widely utilized technique for reducing the storage requirements and transmission time for large
+data sets.  However, when it comes to training deep learning models, the decompression of compressed data can create a
+bottleneck in the machine learning pipeline,  particularly when dealing with specialized data formats such as astronomy and
+medicine that employ custom compression algorithms that can be computationally expensive to decompress.One such specialized
+compression algorithm is RICE coding, which is widely used in the FITS data format in astronomy. To address this bottleneck,
+utilizing Graphics Processing Units (GPUs) and parallelization techniques have emerged as promising solutions for accelerating
+the decompression of large data sets by leveraging the parallel processing capabilities of GPUs. While established
+solutions for mainstream lossless compression algorithms like JPEG-2000 exist, this paper aims to investigate the potential of
+GPU acceleration and parallelization in enhancing the performance of RICE coding, a specialized and niche compression
+algorithm. 

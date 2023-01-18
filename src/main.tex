@@ -108,50 +108,47 @@
 
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
-Data compression is a widely utilized technique for reducing the storage requirements and
-transmission time for large data sets. However, when it comes to training deep learning models,
-the decompression of compressed data can create a bottleneck in the machine learning pipeline, particularly
-when dealing with specialized data formats such as astronomy and medicine that employ custom compression
-algorithms that can be computationally expensive to decompress.One such specialized compression algorithm is RICE coding,
-which is widely used in the FITS data format in astronomy. To address this bottleneck,
-utilizing Graphics Processing Units (GPUs) and parallelization techniques have emerged as promising solutions
-for accelerating the decompression of large data sets by leveraging the parallel processing capabilities of GPUs.
-While established solutions for mainstream lossless compression algorithms like JPEG-2000 exist,
-this paper aims to investigate the potential of GPU acceleration and parallelization
-in enhancing the performance of RICE coding, a specialized and niche compression algorithm.
-
+Data compression is a widely utilized technique for reducing the storage requirements
+and transmission time for large data sets.  However, when it comes to training deep
+learning models, the decompression of compressed data can create a bottleneck in the machine
+learning pipeline,  particularly when dealing with specialized data formats such as astronomy
+and medicine that employ custom compression algorithms that can be computationally
+expensive to decompress.One such specialized compression algorithm is RICE coding, which is
+widely used in the FITS data format in astronomy. To address this bottleneck, utilizing
+Graphics Processing Units (GPUs) and parallelization techniques have emerged as promising
+solutions for accelerating the decompression of large data sets by leveraging the parallel
+processing capabilities of GPUs. While established solutions for mainstream lossless compression
+algorithms like JPEG-2000 exist, this paper aims to investigate the potential of GPU acceleration
+and parallelization in enhancing the performance of RICE coding, a specialized and niche
+compression algorithm.
 
 \chapter{Key terms}\label{r:pojecia}
 
 \section{FITS}
-The Flexible Image Transport System (FITS) format is a digital file format that is commonly
+The Flexible Image Transport System (FITS) format is a digitalfile format that is commonly
 utilized in the field of astronomy for storing and transferring scientific data. FITS files
 typically contain images, data cubes, and tables of observational data, as well as associated metadata.
 One of the key characteristics of FITS is its ability to store multiple data arrays in a single file, which
-allows for the efficient storage and transfer of large data sets. The FITS format is an open standard
-and is supported by a wide range of software and data analysis tools. However, the FITS format is also
-known for its large file size, which can present challenges when working with large data sets.
-As a result, compression algorithms such as RICE compression are often applied to the data before storing in the FITS format. \\
-
-Citing NASAs fits standard: \\
-A FITS file shall be composed of the following FITS structures,
-in the order listed:
+allows for the efficient storage and transfer of large data sets.
+A FITS files are composed of following FITS structures, in the order listed:
 \begin{itemize}
 	\item Primary header and data unit (HDU).
 	\item Conforming Extensions (optional).
 	\item Other special records (optional, restricted).
 \end{itemize}
-Thus, FITS files have follwoing structure:
-\begin{figure}[t]
-	\centering
-	\includegraphics[scale=0.3]{fits}
-\end{figure}
+Thus, files usually resamble following schema:
 
-\newpage
+\centerline{\includegraphics[scale=0.3]{fits}}
+ 
 
 
-
-
+Where, all headers including the primary one contain relevant metadata as a list of keys and value pairs. 
+Furthermore, according to most recent FITS standard published by NASA, there are three types of standard extensions:
+\begin{itemize}
+	\item IMAGE extensions. 
+	\item TABLE ASCII-table extensions; and
+	\item BINTABLE binary-table extensions
+\end{itemize}
 
 
 \section{RICE}
