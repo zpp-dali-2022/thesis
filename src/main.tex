@@ -139,19 +139,20 @@ A FITS files are composed of following FITS structures, in the order listed:
 Thus, files usually resamble following schema:
 
 \centerline{\includegraphics[scale=0.3]{fits}}
- 
 
 
-Where, all headers including the primary one contain relevant metadata as a list of keys and value pairs. 
+
+Where, all headers including the primary one contain relevant metadata as a list of keys and value pairs.
 Furthermore, according to most recent FITS standard published by NASA, there are three types of standard extensions:
 \begin{itemize}
-	\item IMAGE extensions. 
+	\item IMAGE extensions.
 	\item TABLE ASCII-table extensions; and
 	\item BINTABLE binary-table extensions
 \end{itemize}
 
 
 \section{RICE}
+The RICE algorithm is a well-known, lossless data compression algorithm, that used a set of variable-length codes to compress data. The essence of this algorithm is using these codes to change symbols that are expected to be more frequent to shorter code words. Algorithm works on data block that are encoded independently, it’s not needed to transfer some information between different packets. It improves performance and makes RICE algorithm performance independent of data packet size. The RICE algorithm consist of two main parts: a preprocessor and an adaptive entropy coder.
 
 \chapter{GPU acceleration of CCSDS Rice decoding algorithm}\label{r:losers}
 
