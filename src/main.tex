@@ -27,10 +27,10 @@
 % \autor{Adam Deryło, Adrian Hess, Magdalena Pałkus, Michał Skwarek}{34234234}
 
 % Dane magistrantów:
-\autor{Adam Deryło}{342007}
-\autori{Adrian Hess}{342013}
-\autorii{Magdalena Pałkus}{231023}
-\autoriii{Michał Skwarek}{777321}
+\autor{Adam Deryło}{432952}
+\autori{Adrian Hess}{431481}
+\autorii{Magdalena Pałkus}{421537}
+\autoriii{Michał Skwarek}{418426}
 %\autoriv{Autor nr Cztery}{432145}
 %\autorv{Autor nr Pięć}{342011}
 
@@ -106,57 +106,96 @@
 %\listoffigures
 %\listoftables
 
-\chapter*{Introduction}
-\addcontentsline{toc}{chapter}{Introduction}
-Data compression is a widely utilized technique for reducing the storage requirements
-and transmission time for large data sets.  However, when it comes to training deep
-learning models, the decompression of compressed data can create a bottleneck in the machine
-learning pipeline,  particularly when dealing with specialized data formats such as astronomy
-and medicine that employ custom compression algorithms that can be computationally
-expensive to decompress.One such specialized compression algorithm is RICE coding, which is
-widely used in the FITS data format in astronomy. To address this bottleneck, utilizing
-Graphics Processing Units (GPUs) and parallelization techniques have emerged as promising
-solutions for accelerating the decompression of large data sets by leveraging the parallel
-processing capabilities of GPUs. While established solutions for mainstream lossless compression
-algorithms like JPEG-2000 exist, this paper aims to investigate the potential of GPU acceleration
-and parallelization in enhancing the performance of RICE coding, a specialized and niche
-compression algorithm.
+\chapter{Introduction}
+\section{Background and motivation}
+Machine learning (ML) has rapidly become a crucial tool for solving complex problems in a variety of domains, including computer vision, natural language processing, and speech recognition. However, ML pipelines can often experience significant bottlenecks due to multi-stage data processing pipelines that include loading, decoding, cropping, resizing, and other augmentations. This is particularly true when these processing steps are executed on a CPU, which is frequently the case. Since, most of the machine learning training is already GPU accelerated due to ML workloads having a highly parallel nature, it is a natural progression to solve data processing bottlenecks by harnessing GPU acceleration.
+
+One such bottleneck is decompression of RICE coded data, which is one of the most commonly used compression algorithms used in astronomy and astrophysics. Currently, there are only CPU-based solutions for decoding RICE compressed data. This, substantially hinders application of machine learning solutions in astronomy, especially considering the massive amount of training data already stored in RICE compressed algorithm as well as being produced by observatories all around the world. To illustrate, just Solar Dynamics Observatory (SDO), with limited bandwidth due to being a satellite, is producing 130 megabits of rice coded data per second, that is 500 TB per year.
+
+\section{Problem statement}
+The problem at hand is that the current RICE decompression algorithm is a computationally intensive and cannot keep up with the demand for high throughput and real-time processing. The goal of this project is to design and develop a GPU-based RICE decompression algorithm that can significantly accelerate the decompression process and improve the speed, efficiency, and scalability of ML pipelines in astronomy applications.
+
+\section{Research objectives}
+The main objectives of this thesis are as follows:
+
+\begin{itemize}
+	\item To study the existing literature on GPU acceleration of data compression and RICE decompression.
+	\item To analyze the performance of RICE decompression on a CPU and a GPU.
+	\item To design and implement a GPU-accelerated RICE decompression algorithm.
+	\item To evaluate the performance of the GPU-accelerated RICE decompression algorithm and compare it with the CPU-based RICE decompression algorithm.
+	\item And finally, to incorporate findings into NVIDIA Data Loading Library (DALI), so machine learning as well as the astronomy community can utilize our findings.
+\end{itemize}
+
+\section{Thesis structure}
+In this thesis, we present our attempts at parallelizing the RICE decompression algorithm and CUDA-based implementations of our findings.
+
+Chapter 2 aims to define and explain key terms for our problem space, including the RICE algorithm itself. In the following chapter, we review previous work on the subject. We then present our solution architecture and how it ties into NVIDIA's open-source data loading framework called DALI. Additionally, we introduce the Compute Unified Device Architecture (CUDA) to the reader. In Chapter 5, we propose a parallel implementation of the algorithm on GPU with details. Chapter 6 presents our performance and speedup results. Finally, in Chapter 7, we summarize our findings and conclude the thesis.
 
 \chapter{Key terms}\label{r:pojecia}
 
+
+\section{RICE}
+The RICE algorithm is a well-known, lossless data compression algorithm, that uses a set of variable-length codes to compress data. The essence of this algorithm is using these codes to change symbols that are expected to be more frequent to shorter code words. The algorithm works on data blocks that are encoded independently, it’s not needed to transfer some information between different packets. It improves performance and makes RICE algorithm performance independent of data packet size. The RICE algorithm consists of two main parts: a preprocessor and an adaptive entropy coder.
+
 \section{FITS}
-The Flexible Image Transport System (FITS) format is a digitalfile format that is commonly
+The Flexible Image Transport System (FITS) format is a digital file format that is commonly
 utilized in the field of astronomy for storing and transferring scientific data. FITS files
 typically contain images, data cubes, and tables of observational data, as well as associated metadata.
 One of the key characteristics of FITS is its ability to store multiple data arrays in a single file, which
 allows for the efficient storage and transfer of large data sets.
-A FITS files are composed of following FITS structures, in the order listed:
+A FITS files are composed of the following FITS structures, in the order listed:
 \begin{itemize}
 	\item Primary header and data unit (HDU).
 	\item Conforming Extensions (optional).
 	\item Other special records (optional, restricted).
 \end{itemize}
-Thus, files usually resamble following schema:
+Thus, files usually resemble the following schema:
 
 \centerline{\includegraphics[scale=0.3]{fits}}
 
 
 
-Where, all headers including the primary one contain relevant metadata as a list of keys and value pairs.
-Furthermore, according to most recent FITS standard published by NASA, there are three types of standard extensions:
+Where, all headers, including the primary one, contain relevant metadata as a list of keys and value pairs.
+Furthermore, according to the most recent FITS standard published by NASA, there are three types of standard extensions:
 \begin{itemize}
 	\item IMAGE extensions.
 	\item TABLE ASCII-table extensions; and
 	\item BINTABLE binary-table extensions
 \end{itemize}
 
+\chapter{Previous work}
+\section{Rice Coding Suitable for
+  GPU Massively Parallel Implementation}
+\section{Current decompresssion solutions}
 
-\section{RICE}
-The RICE algorithm is a well-known, lossless data compression algorithm, that used a set of variable-length codes to compress data. The essence of this algorithm is using these codes to change symbols that are expected to be more frequent to shorter code words. Algorithm works on data block that are encoded independently, it’s not needed to transfer some information between different packets. It improves performance and makes RICE algorithm performance independent of data packet size. The RICE algorithm consist of two main parts: a preprocessor and an adaptive entropy coder.
+\chapter{Context}\label{r:losers}
 
-\chapter{GPU acceleration of CCSDS Rice decoding algorithm}\label{r:losers}
+\section{NVIDIA}
 
+\section{GPU Programming and CUDA}
+
+\section{DALI}
+
+\chapter{Solution architecture}
+\section{DALI readers}
+\section{CUDA}
+
+\chapter{GPU acceleration of RICE decoding}
 \section{Naive approach}
+\section{Optimizing asynchronous data transfer}
+
+\chapter{Results and analysis}
+\section{Performance evaluation metrics}
+\section{Benchmarking suite}
+\section{Comparison of various approaches}
+
+\chapter{Conclusion}
+\section{Summary of findings}
+\section{Contributions}
+\section{Future work}
+
+
+
 
 
 
