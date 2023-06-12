@@ -65,7 +65,7 @@
 %\autoriv{Autor nr Cztery}{432145}
 %\autorv{Autor nr Pięć}{342011}
 
-\title{GPU acceleration of CCSDS Rice decoding}
+\title{Blazingly fast GPU acceleration of CCSDS Rice decoding}
 \titlepl{Akceleracja GPU dekodowania CCSDS Rice}
 
 %\tytulang{An implementation of a difference blabalizer based on the theory of $\sigma$ -- $\rho$ phetors}
@@ -98,7 +98,7 @@
   }
 
 % miesiąc i~rok:
-\date{Jan 2023}
+\date{Jun 2023}
 
 %Podać dziedzinę wg klasyfikacji Socrates-Erasmus:
 \dziedzina{ 
@@ -140,10 +140,10 @@
 \section{Background and motivation}
 Machine learning (ML) has rapidly become a crucial tool for solving complex problems in a variety of domains, including computer vision, natural language processing, and speech recognition. However, ML pipelines can often experience significant bottlenecks due to multi-stage data processing pipelines that include loading, decoding, cropping, resizing, and other augmentations. This is particularly true when these processing steps are executed on a CPU, which is frequently the case. Since most of the machine learning training is already GPU accelerated due to ML workloads having a highly parallel nature, it is a natural progression to solve data processing bottlenecks by harnessing GPU acceleration. 
 
-One such bottleneck is decompression of RICE-coded data, which is one of the most commonly used compression algorithms used in astronomy and astrophysics. Currently, there are only CPU-based solutions for decoding RICE-compressed data. It substantially hinders application of machine learning solutions in astronomy, especially considering the massive amount of training data already stored in RICE-compressed algorithm as well as being produced by observatories all around the world. To illustrate, just Solar Dynamics Observatory (SDO), with limited bandwidth due to being a satellite, is producing 130 megabits of RICE-coded data per second, that is 500 TB per year.
+One such bottleneck is decompression of RICE-coded data, which is one of the most commonly used compression algorithms used in astronomy and astrophysics. Currently, there are only CPU-based solutions for decoding RICE-compressed data. It substantially hinders application of machine learning solutions in astronomy, especially considering the massive amount of training data already stored in RICE-compressed algorithm as well as being produced by observatories all around the world. To illustrate, just single instrument  - AIA on the Solar Dynamics Observatory (SDO) spacecraft, is producing \~67 megabits of RICE-coded data per second, of which roughly 4 TB is captured on earth \cite{sdo-data}. This amounts to a staggering 1460 TB of new data per year from not even just a single observatory, but a single measurement instrument.  
 
 \section{Problem statement}
-The problem at hand is that the current RICE decompression algorithm is computationally intensive and cannot keep up with the demand for high throughput and real-time processing. The goal of this project is to design and develop a GPU-based RICE decompression algorithm that can significantly accelerate the decompression process and improve the speed, efficiency, and scalability of ML pipelines in astronomy applications.
+The problem at hand is that the current RICE decompression algorithm is computationally intensive and cannot keep up with the demand for high throughput and real-time processing. The goal of this project is to design  and develop a GPU-based RICE decompression algorithm that can significantly accelerate the decompression process and improve the speed, efficiency, and scalability of ML pipelines in astronomy applications.
 
 \section{Research objectives}
 The main objectives of this thesis are as follows:
@@ -159,9 +159,9 @@ The main objectives of this thesis are as follows:
 \section{Thesis structure}
 In this thesis, we present our attempts at parallelizing the RICE decompression algorithm and CUDA-based implementations of our findings. 
 
- Chapter 2 aims to define and explain key terms for our problem space, including the RICE algorithm itself. In the following chapter, we review previous work on the subject. We then present our solution architecture and how it ties into NVIDIA's open-source data-loading framework called DALI. Additionally, we introduce the Compute Unified Device Architecture (CUDA) to the reader. In Chapter 5, we propose a parallel implementation of the algorithm on GPU with details. Chapter 6 presents our performance and speedup results. Finally, in Chapter 7, we summarize our findings and conclude the thesis.
+ Chapter \ref{r:definitions} aims to define and explain key terms for our problem space, including the FITS file format and the RICE compression algorithm itself. In the following chapter, we review previous work on the subject. Thereafter, in chapter \ref{r:context}, the broader context of our thesis is examined. This chapter, aims to introduce the reader to the subject of GPU programming, NVIDIA's involvement in that field. Additionally, we explain core concepts of the DALI library, since it was an integral part of our project. Subsequently, in chapter \ref{r:impl} we present our solution architecture and how it ties into NVIDIA's aforementioned open-source data-loading framework called DALI. In chapter \ref{r:algo}, we propose a parallel implementation of the RICE algorithm on the GPU and describe our efforts in optimizing the parallel implementation of the RICE decoding algorithm. Chapter \ref{r:results} presents our performance and speedup results. Finally, in chapter \ref{r:conclusion}, we summarize our findings and conclude the thesis.
 
-\chapter{Key terms}\label{r:pojecia}
+\chapter{Key terms}\label{r:definitions}
 
 \section{FITS format}
 
@@ -201,9 +201,7 @@ In modern astronomy, observations produce huge datasets (even 12 TB per day \cit
 \item Optimizing computational efficiency.
 \item Following the strategy "Compress once, decompress never," many computational programs provide an interface to operate directly on FITS compressed files \cite{why-rice}. 
 \item Many scientific tools are compatible and accept compressed FITS files.
-\end{itemize}
-
-\\
+\end{itemize}\\
 
 \subsubsection{Tile compression convention}
 
@@ -290,10 +288,10 @@ This process can be ilustrated into following figure \cite{rice-basics}:
 % https://arxiv.org/pdf/0903.2140.pdf
 % (2,3) 
 
-\chapter{Related work}
+\chapter{Related work\label{r:related}}
 
 \section{Overview of the problem space}
-The acceleration of the Golomb-Rice algorithm has garnered significant attention in the literature, with most of the work focusing on the compression side of the problem. In particular, researchers have extensively studied Golomb parameter selection due to its critical role in determining achieved compression ratios. However, regarding throughput acceleration, the majority of the research has focused on implementing FPGA-based hardware acceleration for both compression and decompression. Notably, some software (CPU-based) approaches have been implemented, leveraging input format to achieve decoding throughput improvements from 1 Gbps to 4 Gbps \cite{fpga-dec}.
+The acceleration of the Golomb-Rice algorithm has garnered some attention in the literature, with most of the work focusing on the compression side of the problem. In particular, researchers have extensively studied Golomb parameter selection due to its critical role in determining achieved compression ratios. However, regarding throughput acceleration, the majority of the research has focused on implementing FPGA-based hardware acceleration for both compression and decompression. Notably, some software (CPU-based) approaches have been implemented, leveraging input format to achieve decoding throughput improvements from 1 Gbps to 4 Gbps \cite{fpga-dec}.
 
 As for GPU-based acceleration, Xianyun Wu et al. evaluated the feasibility of GPU acceleration for the coding side of the issue in their study “Is the CCSDS Rice Coding Suitable for GPU Massively Parallel Implementation?” \cite{gpu-rice}. The authors achieved a six-fold speed up over the single-threaded CPU counterpart and concluded that CCSDS Rice coding contains numerous flow control instructions, significantly affecting the instruction throughput. These findings highlight the potential benefits of GPU-based acceleration for the coding side of the problem, but also suggest that further work is necessary to optimise CCSDS Rice coding for efficient GPU-based implementations.
 
@@ -304,7 +302,7 @@ Regarding machine learning and data science workflows, where python is a prevail
 
 In summary, the fitsio and astropy packages offer convenient interfaces for accessing FITS files and decompressing CCSDS Rice encoded data in Python-based workflows. However, it should be noted that all of these packages rely on the same CPU-based RICE decompression algorithm implemented by funpack. While this algorithm has proven to be effective in achieving high compression ratios for a wide range of data types, it is limited in terms of its processing speed and throughput due to its CPU-based nature. As such, there is a growing interest in exploring alternative solutions that leverage emerging hardware technologies such as GPUs and FPGAs to accelerate the RICE decompression process. Such solutions have the potential to significantly improve the performance and efficiency of CCSDS Rice encoding and decoding in various domains, including machine learning, data science, and space science.
 
-\chapter{Context}\label{r:losers}
+\chapter{Broader context}\label{r:context}
 
 \section{NVIDIA}
 NVIDIA Corporation is a technology company known for designing and manufacturing graphics processing units (GPUs). Its professional line of GPUs are used in workstations for applications in such fields as architecture, engineering and construction, media and entertainment, automotive, scientific research, and manufacturing design. 
@@ -312,6 +310,14 @@ NVIDIA Corporation is a technology company known for designing and manufacturing
 In addition to designing hardware, NVIDIA has made significant efforts to develop software tools and libraries that facilitate the use of their GPUs in scientific computing. Among these efforts, CUDA stands out as one of the most notable contributions. CUDA, which stands for Compute Unified Device Architecture, is a parallel computing platform and programming model that enables researchers to harness the power of GPUs for scientific computing tasks \cite{cuda-about}. With CUDA, developers can write programs in C, C++, and Fortran that can take advantage of the parallelism of GPUs to accelerate computations \cite{cuda-toolkit-official}. This has led to significant performance improvements for many scientific computing applications, including those in the fields of astrophysics, computational biology, and machine learning. 
 
 To further support the use of GPUs in scientific computing, NVIDIA provides a range of software libraries that are optimised for use with CUDA. These include cuBLAS, cuFFT, and cuSPARSE, which provide high-performance implementations of common linear algebra, signal processing, and sparse matrix operations that are essential for many scientific computing applications\cite{nvidia-math-libs}. By offering these libraries, NVIDIA has made it easier for researchers and developers to take advantage of the power of GPUs in scientific computing.
+
+\section{CUDA}
+% hsitory and background 
+
+% core concepts
+% kernels
+
+% stream based concurrency model
 
 
 %%\begin{itemize}
@@ -365,7 +371,8 @@ The reader component (Reader) is responsible for orchestrating whole data readin
 
 Without getting into the wheat of specific implementations we can discern one more phase of data reading which every reader operator must implement, that is RunImpl. In this method, reader operator fills the output buffer with data so next operators in processing pipeline can access it. Further, on this stage many reader operators execute data manipulations such as decoding to unify output and allow for greater level of abstraction in use of subsequent operators \cite{dali-readers}. 
 
-\chapter{Project stages and solution architecture}
+\chapter{Project stages and solution architecture}\label{r:impl}
+
 \section{Project stages}
 Our work on the project began with a comprehensive literature review focused on identifying potential solutions to mitigate the RICE decompression bottleneck. The review also aimed to gain an understanding of the current implementations of RICE decompression, including the industry standard CFITSIO. The primary objective of this initial stage was to acquire a strong conceptual foundation to inform the subsequent phases of the project.
 
@@ -381,191 +388,209 @@ Overall, the implementation phase of the project involved the development of a c
 
 In the subsequent section we will go through a architecture of the final solution which was incorporated into DALI.
 
-\section{Solution architecture [DRAFT]}
-In order to incorporate our findings into the DALI library we had to create a new reader operator that would handle FITS files and in the end also allow for 
-acceleration of their decompression. Here is a UML diagram of both versions of FITS readers: \\
+\section{Architecture and implementation details}
+In order to incorporate our findings into the DALI library we had to create a new reader operator that would handle FITS files and in the end also allow for acceleration of their decompression by parallizing on GPUs. Here is a UML diagram of both versions of FITS readers:\\
 
 \centerline{\includegraphics[scale=0.5]{images/fits_reader_uml.png}}
 
-Now we will go though each newly introduced component documenting its details.
+In following sections we will go though each newly introduced component documenting its implementation details.
 \subsection{FitsReader}
-The FitsReader class is a base class that is responsible for reading and loading FITS (Flexible Image Transport System) files in a DALI data pipeline. It is implemented as a template class, taking the Backend and Target types as template parameters. The class inherits from the DataReader class, which is a base class for all data reader operators. The FitsReader class provides several member functions and inherits some functions from the DataReader class such as GetSample(), which retrieves a specific sample from the already prefetched batch.
+The FitsReader class is a base class that is responsible for reading and loading FITS (Flexible Image Transport System) files in a DALI data pipeline. It is implemented as a template class, taking the Backend and Target types as template parameters. The class inherits from the DataReader class, which is a base class for all data reader operators and contains less context depended methods such as GetSample(), which retrieves a specific sample from the already prefetched batch. In the FitsReader class we have implemented two core functionalities - data reading setup in SetupImpl() method, and api interface definition. 
 
-In the FitsReader class 
+The SetupImpl() method takes a vector of OutputDesc objects and a Workspace as parameters. The function first calls the SetupImpl() function of the base class to start prefetching data and wait for a consumable batch. Then, it determines the number of outputs and samples, and resizes output\_desc, a container from which any subsequent operator will get data, accordingly. 
+Finally, it validates the dimensions and data types of each sample in the batch, ensuring consistency among samples. 
 
-Moreover, the SetupImpl() function is overridden to set up the reader operator implementation. It takes a vector of OutputDesc objects and a Workspace as parameters. The function first calls the SetupImpl() function of the base class to start prefetching data and wait for a consumable batch. Then, it determines the number of outputs and samples, and initializes vectors to store the dimensions and data types of each output. It resizes the output\_desc vector to match the number of outputs.
+Declaration of api interface was done using preexisting DALI\_SCHEMA macro which allows for registering a visible form python interface of the newly created operator. Additionally it auto generates documentation for that operator which you can find here \cite{fitsreader-docs}.
 
-The function then iterates over each output and assigns the corresponding dimensions and data types from the sample header to the output\_desc vector. Finally, it validates the dimensions and data types of each sample in the batch, ensuring consistency among samples.
-
+%% describe implementation of API interface
 
 \subsection{FitsReaderCPU}
-The FitsReaderCPU class is a derived class of FitsReader specifically designed for the CPU backend. It adds the functionality to run the reader implementation on the CPU. It overrides the RunImpl() function to provide the implementation for reading FITS files on the CPU.
+The FitsReaderCPU class is a derived class of FitsReader specifically designed for the CPU backend. The constructor of FitsReaderCPU takes an OpSpec object as a parameter and calls the constructor of the base class. It also initializes the loader\_ member variable by calling the InitLoader() function with the FitsLoaderCPU type and other par\_descameters obtained from the OpSpec in order to pass along user specified parameters. Furthermore, it overrides the RunImpl() function to provide the implementation for reading FITS files on the CPU. 
 
-The constructor of FitsReaderCPU takes an OpSpec object as a parameter and initializes the base FitsReader class using the constructor of the base class. It also initializes the loader\_ member variable by calling the InitLoader() function with the FitsLoaderCPU type and other parameters obtained from the OpSpec.
-
-Overall, the FitsReader class provides the foundation for reading FITS files in a Deep Learning pipeline, while the FitsReaderCPU class extends it to support running the reader on the CPU using the FitsLoaderCPU.
 
 \subsection{FitsReaderGPU}
-
-The FitsReaderGPU component consists of a header file and a source file that implement the functionality for reading and decompressing FITS files on a GPU. It extends the functionality of the base FitsReader class and utilizes the FitsFileWrapperGPU class to handle the low-level file operations and access the FITS file data.
-
 The main purpose of the FitsReaderGPU component is to efficiently read and decompress FITS files on a GPU, taking advantage of the parallel processing capabilities of modern GPUs. This allows for faster data loading and processing, which is especially beneficial when dealing with large datasets or real-time applications.
 
-The implementation utilizes CUDA, a parallel computing platform and programming model, to perform the decompression of the FITS data on the GPU. It includes a kernel function called "rice\_decompress" that performs the Rice decompression algorithm, a lossless compression technique commonly used in FITS files. The kernel function is templated to support different data types, such as uint8\_t, uint16\_t, and uint32\_t, corresponding to the pixel data types commonly found in FITS files.
+The implementation utilizes CUDA, a parallel computing platform and programming model, to perform the decompression of the FITS data on the GPU. It includes a kernel function called "rice\_decompress" that performs our CCSDS RICE decompression algorithm, in case to be read files require decompression. The kernel function is templated to support different data types, such as uint8\_t, uint16\_t, and uint32\_t, ect. corresponding to the pixel data types commonly found in FITS files. Thus, if else logic is being handled by 
+the RunImpl() method which is executed by the CPU. By doing so we aimed at reducing on device branch prediction and offloading it to better suited for that task CPU. 
 
-During execution, the FitsReaderGPU component reads the compressed data from the FITS file and applies the Rice decompression algorithm in parallel on the GPU. The decompressed data is then optionally rescaled using the provided scaling factors (bscale and bzero) and stored in the output tensors. If the FITS file is not compressed, the data is directly copied to the output tensors.
+During execution, the FitsReaderGPU component reads the compressed data from the FITS file and applies the Rice decompression algorithm in parallel on the GPU. The decompressed data is then optionally rescaled using the provided scaling factors (bscale and bzero) and stored in the output tensors. If the FITS file is not compressed, the data is directly copied from host memory to the output tensors allocated on the device memory.
 
 \subsection{FitsLoader}
 
-The FitsLoader component is responsible for loading FITS (Flexible Image Transport System) files in a Deep Learning pipeline. It is implemented as a template class, taking the Backend and Target types as template parameters.
+The FitsLoader component is responsible for implementing logic of loading FITS files from host memory into a struct consisting of meta data and a container of Tensor objects on which the FitsReader operator operates. It is implemented as a template class, taking the Backend and Target types as template parameters. The FitsLoader class inherits from the FileLoader class, which is a base class for all file loader operators in the pipeline. It overrides the PrepareEmpty() and ReadSample() methods to handle the preparation and reading of FITS files.
 
-The FitsLoader class inherits from the FileLoader class, which is a base class for all file loader operators in the pipeline. It overrides the PrepareEmpty() and ReadSample() methods to handle the preparation and reading of FITS files.
+During construction, the FitsLoader class takes the OpSpec object and a boolean flag indicating whether to shuffle the files after each epoch. OpSpec contains parameters such as number of outputs, which are mapped to the number of HDUs which should be read from each file.  Given that information FitsLoader infers what HDU indices are ought to be read. 
 
-During construction, the FitsLoader class takes the OpSpec object and a boolean flag indicating whether to shuffle the files after each epoch. It also initializes the HDU indices and data types for each extension in the FITS file based on the provided arguments.
+The PrepareEmpty() method sets the target object to an empty state, preparing it to hold the loaded data. The ReadSample() method reads a sample from the FITS file, processing each extension specified by the HDU indices argument retrieved from the OpSpec object.
 
-The PrepareEmpty() method sets the target object to an empty state, preparing it to hold the loaded data. The ReadSample() method reads a sample from the FITS file, processing each extension specified by the HDU indices.
-
-In the ReadSample() method, the FITS file is opened, and the number of HDUs (Header Data Units) in the file is determined. The target object is resized to accommodate the specified number of HDUs.
-
-For each extension specified by the HDU indices, the method moves to the corresponding HDU, reads the header, and stores it in the target object. It then resizes and resets the specific output in the target object based on the shape and data type specified in the header.
-
-After resizing the output, the method calls the ReadDataFromHDU() method, which is a virtual function that needs to be implemented in derived classes. This function reads the actual data from the HDU and populates the target object accordingly.
-
-Finally, the method sets the metadata and file path in the target object and moves to the next sample or wraps around to the beginning of the shard if necessary.
+In the ReadSample() method, the FITS file is opened, and the number of HDUs (Header Data Units) in the file is determined. The target object is resized to accommodate the specified number of HDUs. For each extension specified by the HDU indices, the method moves to the corresponding HDU, reads the header, and stores it in the target object. It then resizes and resets the specific output in the target object based on the shape and data type specified in the header. After resizing the output, the method calls the ReadDataFromHDU() method, which is a virtual function that needs to be implemented in derived classes. This function reads the actual data from the HDU and populates the target object accordingly. Finally, the method sets the metadata and file path in the target object and moves to the next sample or wraps around to the beginning of the shard if necessary.
 
 \subsection{FitsLoaderCPU}
 
-The FitsLoaderCPU class is a derived class of FitsLoader specifically designed for the CPUBackend and FitsFileWrapper target. It provides the implementation for reading FITS files on the CPU.
-
-The FitsLoaderCPU constructor takes the OpSpec object and an optional boolean flag for shuffling the files after each epoch. It calls the base FitsLoader constructor to initialize the FitsLoaderCPU class.
-
-The ReadDataFromHDU() method in the FitsLoaderCPU class is overridden to provide the specific implementation for reading the data from the HDU on the CPU. The ResizeTarget() method is also overridden to resize the target object accordingly.
+The FitsLoaderCPU class is a derived class of FitsLoader specifically designed to work with FitsReaderCPU. In essence it provides the implementation for the aforementioned ReadDataFromHDU() helper function ReadDataFromHDU(). As our main focus was to provide GPU acceleration 
+of the decoding process of FITS files we entirely resorted to using 
+CFITSIO function calls to parse, read and decode files if necessary in the CPU version of this operator.  
 
 \subsection{FitsLoaderGPU}
-
-
-The FitsLoaderGPU component is responsible for loading FITS (Flexible Image Transport System) files on the GPU in a Deep Learning pipeline. It is implemented as a class and is a derived class of the FitsLoader class, specifically designed for the GPUBackend and FitsFileWrapperGPU target.
-
-The FitsLoaderGPU class overrides two methods from the base class: ReadDataFromHDU() and ResizeTarget(). The ReadDataFromHDU() method reads the data from the HDU (Header Data Unit) in the FITS file and populates the target object with the data. It handles both compressed and uncompressed data, extracting undecoded data if it is compressed. The data is then resized and copied to the GPU memory.
-
-The ResizeTarget() method resizes the target object to accommodate the specified number of HDUs and associated data.
-
-The FitsFileWrapperGPU structure is defined to hold the header, data, tile offset, tile size, and filename for each HDU in the FITS file.
-
-The FitsLoaderGPU class provides an explicit constructor that takes the OpSpec object and an optional boolean flag for shuffling the files after each epoch. It calls the base FitsLoader constructor to initialize the FitsLoaderGPU class.
-
-In summary, the FitsLoaderGPU component extends the functionality of the base FitsLoader class to support loading FITS files on the GPU. It provides methods for reading data from HDUs and resizing the target object, while the FitsFileWrapperGPU structure holds the necessary information for each HDU.
+The FitsLoaderGPU is a  GPU counterpart of the previously examined class. Similarly, it also
+derived from the base FitsLoader class and provides implementation of ReadDataFromHDU() method. Despite the GPU suffix in the name it actually doesn't load the contentment's of 
+the provided files into the GPU memory but rather simply copies it to the host memory. 
+The distinguishing logic encapsulated in this component is that in case the loaded file 
+is compressed it extracts its raw compressed data, and groups it into the tiles so the decompression kernel in the FitsReaderGPU can concurrently process each tile. More on 
+behavior of the kernel will be in the next chapter. 
 
 \subsection{Utils}
 
-While for the most part we relied on functions provided by CFITSIO library to
-parse FITS file contents we encountered that not all our needs were met by
-the library and had to implement certain functionalities ourselves. 
+While we primarily relied on the functions provided by the CFITSIO library to parse the contents of FITS files, we encountered certain limitations that required us to implement additional functionalities ourselves.
 
-For example, we had implement function for raw data extraction since 
-CFITSIO did not provide any way to access raw data of compressed files without decompressing them first. 
+One such example was the need to extract raw data from compressed files without the requirement of decompressing them first. As CFITSIO did not offer a straightforward way to access the raw data of compressed files, we developed a custom function to handle this specific task. This implementation allowed us to efficiently access the necessary data for further processing without unnecessary decompression steps.
 
-Furthermore, we introduced several other utilities such as handlers for file streams and classes to map a metadata contained in headers of each read HDU into the objects for further use in the code base. 
+Moreover, we introduced several other utilities to augment the capabilities of our solution. We created handlers for file streams, enabling smooth interaction with file I/O operations. Additionally, we developed classes to map the metadata contained in the headers of each read HDU (Header Data Unit) into objects that could be conveniently used throughout the codebase. All in all, these utility additions created more seamless experience of working with FITS files inside the DALI library.
+
+\subsection{Testing and CI/CD} 
+To enhance the development speed and ensure the functionality of our new features in the DALI library, we adopted two types of tests: end-to-end tests and unit tests.
+
+End-to-end tests were introduced first chronologically, as they allowed us to verify the correct behavior of our solution and determine if we could proceed with implementing new features and optimizations. For these tests, we utilized NumPy and Random python packages to generate arrays of pixel values with various dimensions for all supported data types. Using astropy, we saved the generated data in FITS format to establish a ground truth for the tests. Subsequently, we compared the data read by the Fits-Reader on both back-ends to the pre-generated ground truth, ensuring their consistency. We utilized the nose2 testing framework to facilitate these tests.
+
+In addition to the black-box testing approach, we also developed unit tests for the more algorithmically complex components. They
+were welcomed addition during our development cycles since with the introduction of certain performance optimizations such as loop unrolling, parts of our code base tended to become less readable. For example, one such component that necessitated unit testing was the aforementioned raw data extraction utility. 
+
+Apart from running tests locally, they were also included into the CI/CD pipeline, so no pull request would be merged into the NVIDIA DALI repository if introduced changes broke our tests. 
+% if time allows write more about CI\CD pipepline 
+
+\chapter{GPU acceleration of RICE decoding}
+
+\section{Naive approach}\label{r:algo}
+
+During CCSDS Rice compression, the image is divided into a grid of rectangular tiles (Internal Tiled-Image Compression). Each tile of pixels is individually compressed and then stored in rows of a variable length array column in a FITS binary table. Tiles are by default row-wise, but in fact they can be of any size.
+
+The above considerations immediately lead to the idea that each tile should also be decompressed individually. While extracting the compressed data, we also calculate the start and end indexes of all tiles and pass this information to the GPU kernel. Then we can simply launch as many threads as possible and delegate each of them to handle the decompression of a single tile. In the default case of row-wise tiles, all rows in the image are decoded simultaneously.
+
+\section{Optimizing asynchronous data transfer}
+% CUDA has it, and what it allows
+Compute Unified Device Architecture (CUDA) since its very beginnings supports asynchronous data transfer between host and device and vice versa. This feature allows for non blocking execution with respect to the host code as well as well as enables possibility of overlapping kernel execution and data transfers. 
+% How it works??? this section depends on CUDA
+% section in Context, don't know if we should explain whole concurency model
+Asynchronous data transfer ties deeply into the CUDA concurrency model. As such when data is copied from host memory to the device for the processing, one has to specify a stream with which the copy operation will be synchronized. Thus, we place H2D copy of the compressed data and subsequent kernel execution on the same stream allowing for host to move on to
+processing other files, and in turn initiating more kernel executions in the same span of time. The effects of such optimizations
+can be illustrated by the following diagram: 
+
+\centerline{\includegraphics[scale=0.3]{images/async/cuda1.png}}
+
+In our case, we are not too bothered about device to host (D2H) data transfers since subsequent operators are expected to
+work on compatible memory. I.e. if the reader operator back-end is set to GPU then it reads data into the GPU memory and
+following data augmentations can also rely on GPU acceleration. In the end, deep learning network that will be the final recipient of the data is also expected to work with device memory. This eliminates completely potential bottlenecks caused by the back and forth 
+data transfers on a PCIe data bus with its limited bandwidth. More on that in the ensuing section.   
+
+
+
+\section{Minimizing data transfers}
+When being careless with the structure of the data and the manner in which it is copied over to the device memory we might become stifled in our pursuit of performance by the time spend on doing I/O operations instead of performing any meaningful computation. 
+
+This problem is of such importance due to the vast discrepancy between bandwidth between device (GPU) and its memory (651.3 GB/s in case of NVIDIA TITAN V graphics card \cite{titan-v})  and the peak bandwidth between host memory and device memory (32 GB/s on PCIe x16 Gen4 \cite{pcie}). This discrepancy holds up even in case of proprietary solutions such as NV-Link \cite{gpu-interconnect}, making a transfer of data between host and device a natural bottleneck \cite{gpu-bottelnecks}.
+Nonetheless, there are several principles that help to combat lose of performance due to this 
+predicament. And all of those techniques have one common aim - that is utilizing the H2D bandwidth to the fullest. 
+
+% recheck the data about single burst vs payload size 
+Firstly, we resorted to aggregating numerous small transfers into a single larger transfer
+of continuous memory. Why such optimization might be helpful? 
+Single payload sent using PCIe or NV-link interconnect has anywhere from 128B to 512B \cite{pcie}.
+Thus when we copy non contiguously allocated memory part of the bus is unutilized as it transmits irrelevant data. 
+As for why doing a lot of memcpy calls is not beneficial might seem quite intuitive but
+the reason is twofold. First, we might overwhelm driver that has handle those
+calls. Secondly, we are naturally under utilizing the bandwidth of the interconnect. This effect saturates
+at certain point (around $2^{22} B$) where larger chunks of data do not improve the bandwidth \cite{gpu-interconnect}. Nonetheless,
+improvement till that point is of an exponential nature.
+To harness those improvements before initializing H2D transfer we ensure that the to be transferred data representing RICE coded images is allocated in a contiguous manner even if that means that it has to be re-copied in the host memory.  
+
+
+Secondly, we experimented with the utilization of page-locked (or "pinned") memory. Normally,
+data allocations on the host (CPU) are pageable. However, direct access to data from pageable host memory is not possible on the GPU. Therefore, when a data transfer is initiated from pageable host memory to device memory, the CUDA driver necessitates the allocation of a temporary page-locked, or "pinned," host array. This process involves copying the host data to the pinned array and subsequently transferring the data from the pinned array to the device memory \cite{pinned_memory}. The following diagram illustrates this sequence of operations:
+\centerline{\includegraphics[scale=0.3]{images/memory/pinned.png}}\\
+Basically, when using pinned memory we can avoid unnecessary copy operations. This has been shown to reduce the execution times 
+of various algorithms but the order of 2. However, the improvements weren't consistent accords all benchmarks, especially in 
+cases where the workloads were more GPU bound than CPU bound \cite{pinned_comparison}.  
+
+
+\\
+
+%% how this helps
+
+
+
+Lastly, as already mentioned in the asynchronous data transfer section, overlapping data transfers between the host and the device with kernel execution and other data transfers can lead to improved overall system efficiency. This overlap allows for concurrent execution of these operations, minimizing idle time and maximizing resource utilization.
 
 
 
 
-
-\subsection{Testing}
-To improve development speed and ensure that our new features in DALI library actually work we have devised two types of tests end to end and unit tests
-
-End to end tests were chronologically introduced fits, since they allowed us to verify if our solution behaves correctly at all and if we can move forward with new features and optimizations. To this end, we employed numpy and randInt to create a randomly generated arrays of pixel values for all supported data types as well as various dimensions. Then having the grand truth for the tests we used astropy to save generated data in FITS format. Finally, we tested if data read by Fits-Reader on both back-ends matches the pre-generated grand truth. 
-
-In addition to black box testing approach we also wrote unit tests for the more algorithmically complicated components, which tended to get less and 
-less readable with certain optimizations such as loop unrolling. 
-
-\subsection{CI/CD}
+\section{Kernel 3.0}
 
 
+\chapter{Results and Analysis}\label{r:results}
+This chapter presents the benchmark results of our project. The benchmark tests are used to measure the performance of our project, particularly in terms of how the incorporation of DALI affects the performance of processes handling large data sets. 
 
+Additionally, these tests act as a form of validation. We developed our project in collaboration with NVIDIA and the Solar Dynamics Observatory (SDO). These benchmarks provide an opportunity to confirm that our system operates as expected, ensuring that the work we've done meets our anticipated outcomes.
 
+Importantly, benchmarks also help us establish a reproducible testing environment. This ensures that our findings are not an artifact of a specific set of conditions, but rather results that can be replicated under similar parameters. In the context of this study, it is worth noting that the same dataset was used across both stages (section \ref{dataset}). This consistency in data usage further enhances the comparability and reliability of our results.
 
-\chapter{GPU acceleration of RICE decoding}https://www.overleaf.com/project/637dd868a84cdd4898a13e23
-\section{Naive approach}
-\section{Optimizing asynchronous data transfer}https://www.overleaf.com/project/637dd868a84cdd4898a13e23
-
-\chapter{Results and Analysis}
-
-Performance benchmarking forms an integral part of our project. As already mentioned in the project stages chapter, it was divided into two
-stages:
+Performance benchmarking was divided into two stages:
 \begin{itemize}
-    \item Comparing the speed of DALI's readers. FITS decoding on CPU versus GPU (section \ref{benchmark}).
-    \item Measuring the speedup of the learning process of a U-Net-based CHeSS deep learning model \cite{CHeSS} with DALI integration (section \ref{chess}).
+    \item Synthetic Benchmarks: comparing the speed of DALI's readers. FITS decoding on CPU versus GPU (section \ref{benchmark}).
+    \item Application Benchmarks: measuring the speedup of the learning process of a U-Net-based CHeSS deep learning model \cite{CHeSS} with DALI integration (section \ref{chess}).
 \end{itemize}
 
-The same dataset \cite{sdo} was used across both stages (section \ref{dataset}).
+This double testing process allows us to fully evaluate our system's performance. On one hand, Synthetic Benchmarks let us measure the speed of individual operations. That's really useful, because it lets us figure out which parts of our system are slower and might need some work. On the other hand, Application Benchmarks help us see how these speeds affect the learning process of our model in a real-world scenario. We believe that this comprehensive approach to benchmarking will give us valuable insights into the overall performance and areas of improvement of our project.
 
 \section{Experimental Setup}
-%TODO: dodać źródła (?)
 
 The computational experiments for this study were conducted on a dedicated machine equipped with a high-performance CPU and GPU to facilitate the extensive data handling and processing tasks.
 
-The primary graphics processing unit (GPU) used for the experiments was an NVIDIA GV100 [TITAN V] graphics card. This GPU is part of NVIDIA's Volta architecture line and is renowned for its high computational power and proficiency in handling data-intensive tasks. The GV100 [TITAN V] supports a 64-bit memory interface and operates at a clock speed of 33MHz, providing a substantial computational resource for deep learning applications.
+The primary graphics processing unit (GPU) used for the experiments was an NVIDIA GV100 [TITAN V] graphics card \cite{titan}. This GPU is part of NVIDIA's Volta architecture line and is renowned for its high computational power and proficiency in handling data-intensive tasks. The GV100 [TITAN V] supports a 64-bit memory interface and operates at a clock speed of 33MHz, providing a substantial computational resource for deep learning applications.
 
-The central processing unit (CPU) used in this work was an Intel(R) Core(TM) i9-10920X CPU, which operates at a base frequency of 3.50GHz, with a maximum frequency of up to 4.80GHz. This high-performance CPU features 12 cores and 24 threads, allowing for a high level of parallel processing. This is particularly beneficial for tasks that can be divided into smaller, independent subtasks, such as many data processing tasks in machine learning.
-
-These hardware resources provided a solid foundation for the execution of the complex and resource-intensive operations in this study. The GPU, with its data handling capabilities, and the CPU, with its computational power, proved to be instrumental in the integration of DALI into the CHeSS codebase and the subsequent performance benchmarking.
+The central processing unit (CPU) used in this work was an Intel(R) Core(TM) i9-10920X CPU \cite{intel}, which operates at a base frequency of 3.50GHz, with a maximum frequency of up to 4.80GHz. This high-performance CPU features 12 cores and 24 threads.
 
 
 \section{\label{dataset}Dataset Description}
 
-The dataset used in evaluating our findings \cite{sdo} deserves an in-depth presentation due to its use in both performance testing and training of the CHeSS model \cite{CHeSS}. This dataset is the product of meticulous curation from the Solar Dynamics Observatory's (SDO) Atmospheric Imaging Assembly (AIA) 193 Angstrom telescope observations, which meticulously covered about a year of solar activity in 2011.
+We used the dataset from the Solar Dynamics Observatory's (SDO) 193 Angstrom telescope, capturing solar activity throughout 2011. It contains 1349 FITS files, each an image of the sun (Figure \ref{fits_photo}).
 
-The dataset comprises images of the sun captured every 4 hours, resulting in an extensive collection of 1349 FITS files. FITS (Flexible Image Transport System) is a digital file format designed to store, transmit, and manipulate scientific data. It's extensively adopted in astronomy due to its flexibility and efficiency in handling complex and voluminous data like solar images. 
+Of particular interest within these images are "coronal holes," areas where the solar magnetic field reaches out into space instead of looping back onto the sun's surface. Studying these areas is crucial for solar physicists because they can generate solar wind streams, which influence space weather conditions on Earth \cite{coronal-holes}.
 
-The labels in the dataset outline what is referred to as a "coronal hole." Coronal holes are areas on the sun where the solar magnetic field extends out into space rather than looping back onto the sun's surface. They are of particular interest to solar physicists due to their correlation with solar wind stream generation, which can influence space weather conditions affecting Earth.
 
-This data set has a dual purpose in our study. Firstly, it provides a realistic platform for our performance benchmarking. With its large size, it allows us to test the limitations of our computational hardware and the performance of our code. Secondly, it serves as a training data for U-Net-based CHeSS deep learning model\cite{CHeSS}. The model learns to detect and segment coronal holes by training on these accurately labelled images. This learning phase involves the model gradually adjusting its internal parameters to minimise the difference between its predictions and the actual labels, resulting in a trained model capable of accurately segmenting coronal holes in new, unseen images of the Sun.
-
-In summary, this carefully curated dataset forms an integral part of our project. It provides the CHeSS model with the varied and high-quality data it needs for training. 
-Comparing the performance of creating a deep learning model with and without DALI gives us a reliable measure of the potential benefits of DALI.
-
-Examples of the photos appearing in the data are presented in images \ref{fits_photo}. 
-
-\begin{figure}[htbp]
-    \vspace{1cm} % Dodaj poziomą przestrzeń tutaj
+\begin{figure}[h]
+    \vspace{1cm} 
     \centering
     \begin{minipage}{.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{im1.jpeg}
+        \includegraphics[width=\textwidth]{sdo1.png}
     \end{minipage}\hfill
     \begin{minipage}{.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{im2.jpeg}
+        \includegraphics[width=\textwidth]{sdo2.png}
     \end{minipage}
-    \caption{Examples photos from SDO \cite{sdo}}
+    \caption{Examples of photos from SDO 193 Angstrom telescope \cite{sdo-photos}}
     \label{fits_photo}
 \end{figure}
 
+We use this dataset for two primary purposes in our project. For synthetic benchmarks, the large size of the dataset allows us to measure speed and efficiency of our computational tools and methods under heavy data loads. For the application benchmarks, we use this dataset to train the CHeSS model \cite{CHeSS} in different configurations, with and without use of DALI. By presenting the model with this dataset, it learns to detect and segment coronal holes. Training the model with this data on various configurations allows us to see how different settings influence its performance.
 
-\section{\label{benchmark}Benchmark test on CPU versus GPU}
-% TODO: nasze testy są stosowany by mierzyć czas wczytywania plików
-This tests evaluate the performance of the GPU-accelerated RICE decompression algorithm and compare it with the CPU-based RICE decompression algorithm. A script was created to test only the raw speed of reading FITS files. The impact of the rest of the data loading pipeline was intentionally omitted. 
+\section{\label{benchmark}Synthetic benchmarks}
+\subsection{Overview of Tests}
+This test evaluates the performance of the GPU-accelerated RICE decompression algorithm and compares it to the CPU-based RICE decompression algorithm. Moreover, the results were also compared with those from using Python's astropy and fitsio. The script was designed to test only the speed of FITS file reading. The impact of the rest of the data loading pipeline was deliberately excluded.
 
-\subsection{Tests overview}
-This phase of benchmarking was fundamentally focused on measuring and contrasting the performance of DALI's readers.FITS decoding on two different computational environments: the CPU and the GPU. This comparison aimed to gain an understanding of how effectively DALI exploits the computing power of the GPU and how it fares when compared to the CPU's performance.
+The dataset used for the tests was the one mentioned previously \cite{sdo}, consisting of 1349 FITS files. Considering the large size and complexity of these files, the experiment provided a realistic scenario for testing and comparing the performance of both types of hardware.
 
-The dataset \cite{sdo} of 1349 FITS files, compiled from SDO's observations in 2011, was used for these tests. Given the voluminous size and complexity of these files, the experiment offered a realistic scenario for testing and comparing the performance on both hardware types.
-
-For each test, a batch size of 32 was used along with 24 threads, providing consistency to the results and ensuring that any performance difference observed could be attributed to the hardware rather than variations in processing parameters.
+A batch size of 32 with 24 threads was selected as it resulted in the best test outcomes. Applying these values across all tests ensured consistency in the results and guaranteed that any observed differences in performance could be attributed to the hardware, not changes in processing parameters.
 
 
 
 \subsection{Metrics}
-%TODO
-% We conducted our experiments using a dataset of RICE-compressed FITS files with varying sizes and compression ratios. We measured the performance of our proposed solution for different batch sizes, and compared it to the performance of a CPU-based RICE decompression algorithm.}
-
-
 To effectively evaluate the performance of our proposed solution for the DALI FITS file reader, we adopted several key metrics:
 \begin{itemize}
     \item \textbf{Throughput}: Defined as the number of FITS files processed per unit of time (specifically, per second). Higher throughput corresponds to more efficient data handling and faster processing times, which are particularly critical for large datasets.
     \item \textbf{Latency}: Represents the time duration required to process a single FITS file, from initiation to completion. Lower latency indicates a faster response and swift data processing, contributing to overall system efficiency.
-    \item Furthermore, we took into consideration the \textbf{mean time}, \textbf{total time}, and \textbf{variance} in our performance measurements. These statistical measures provided a more nuanced understanding of our solution's performance, taking into account both consistency and efficiency in data processing. This statistical approach ensured a comprehensive evaluation, shedding light on all aspects of the performance of our DALI-based FITS reader.
+    \item Furthermore, we took into consideration the \textbf{mean time}, \textbf{total time}, and \textbf{variance} in our performance measurements. These statistics offer a more detailed view of our solution's performance.
 \end{itemize}
 
 
@@ -573,19 +598,22 @@ To effectively evaluate the performance of our proposed solution for the DALI FI
 The results are presented in table \ref{CPUvsGPU} and in figure \ref{CPUvsGPUjpeg}.
 The results showed a pronounced difference in performance of our solution between the two environments. The GPU outperformed the CPU by a significant margin, achieving a throughput of 48.8 files/s compared to the CPU's 4.47 files/s. The GPU also boasted a substantially lower latency at 0.0205 s, a stark contrast to the CPU's 0.224 s. These numbers clearly highlight the advantage of utilizing GPU resources when working with substantial and complex datasets like the ones used in this project.
 
+% - results of FItsReaderCPU ( === cfitiso) vs FitsReaderGPU
+% - restuls against python packages astropy & fitsio
+
 \renewcommand{\arraystretch}{2}
 \begin{table}[H]
     \centering
-    \begin{tabular}{|c|c|c|}
+    \begin{tabular}{|c|c|c|c|c|}
         \hline
-        & CPU & GPU \\\hline
-        Throughput (files/\textit{s}) & 4.47 & 48.80 \\\hline
-        Latency (\textit{s}) & 0.22 & 0.02 \\\hline
-        Total time (\textit{s}) & 301.61 & 27.64 \\\hline
-        Mean time per batch (\textit{s}) & 7.01 & 0.64 \\\hline
-        Variance (\textit{s}) & 6.41 & 0.07 \\\hline
+        & FitsReaderCPU & FitsReaderGPU & Astropy & FITSIO \\\hline
+        Throughput (files/\textit{s}) & 4.47 & 48.80 & x & x \\\hline
+        Latency (\textit{s}) & 0.22 & 0.02 & x & x \\\hline
+        Total time (\textit{s}) & 301.61 & 27.64 & x & x \\\hline
+        Mean time per batch (\textit{s}) & 7.01 & 0.64 & x & x \\\hline
+        Variance (\textit{s}) & 6.41 & 0.07 & x & x \\\hline
     \end{tabular}
-    \caption{\label{CPUvsGPU} Comparing the speed of DALI's readers.FITS decoding on CPU versus GPU}
+    \caption{\label{CPUvsGPU} Results of synthetic benchmarks.}
 \end{table}
 
 %TODO: zorbic przewy z gory i z dolu obrazkow by bylo czytelne
@@ -615,20 +643,16 @@ The results showed a pronounced difference in performance of our solution betwee
         \includegraphics[width=\textwidth]{total_time.png}
         \subcaption{Total time}
     \end{minipage}
-    \caption{DALI performance comparison test results on CPU and GPU.}
+    \caption{Results of synthetic benchmarks.}
     \label{CPUvsGPUjpeg}
 \end{figure}
 
 
 
+\section{\label{chess}Application Benchmarks}
 
+Application benchmarks serve as end-to-end evaluations of how our solution performs in real-world applications. A main aspect of this assessment involves implementing various data preprocessing pipelines in the CHeSS project. By utilizing different technologies for this purpose, we can carry out a comparative analysis of their performance. Integrating NVIDIA's DALI into the CHeSS model introduces improvements to the model's data handling capabilities, offering a possibility of speeding up the computations. The inclusion of our custom FITS file handling function in DALI and its subsequent use in the CHeSS model demonstrates a practical approach to improving performance.
 
-\section{\label{chess}Integration of DALI into CHeSS}
-% TODO: testy Chess są przykładem jak w praktyce mozna usprawnic wydajnosc procesu poprzez usprawnienie wczytywania plików przy uzyciu DALI
-% CHYBA OK?
-
-%{TODO: zaznaczyc co z tego algorytmu jest dla nas istotne - czyli ze on wczytuje i pracuje na dużej liczby dużych zdjęć. wykorzystuje do tego tego fitsio. Mierzymy czas tworzenia modelu}
-% CHYBA OK?
 \subsection{CHeSS Overview}
 The Coronal Hole Semantic Segmentation (CHeSS) project \cite{CHeSS} is an initiative focused on the application of deep learning for the detection and segmentation of solar coronal holes. These coronal holes, characterized by lower temperatures and densities compared to surrounding regions, are key to understanding solar winds and the Sun’s magnetic field dynamics.
 
@@ -636,85 +660,64 @@ CHeSS capitalizes on the power of deep learning, utilizing a U-Net-based archite
 
 In terms of input data, CHeSS operates on a dataset of solar images, which are subsequently processed and analyzed to identify and delineate the coronal holes. To facilitate this process, the project makes use of the FITS file format. 
 
-\subsection{Practical implications of DALI integration with CHeSS}
 
-The incorporation of NVIDIA's DALI into the CHeSS model marks a significant development in this research, fundamentally improving the model's data handling abilities and potentially expediting the training procedure.
+\subsection{DALI Integration in CHeSS}
 
-Introducing our custom FITS file handling function into DALI, and subsequently employing it within the CHeSS model, provides a clear example of how practical improvements in performance can be realized. The importance of this integration is considerable, as it exhibits a tangible instance where our work can directly enhance the efficiency of scientific research workflows.
-
-This implementation is particularly significant as it illustrates the concrete advantages of our approach. By streamlining the file loading process using the improved FITS file handling capabilities of DALI, we demonstrate how our work can support researchers by enabling more rapid and efficient training of models. The practical consequences of this integration underscore the relevance and value of our work in extending the computational performance of deep learning models, thereby making a substantial contribution to the wider scientific community.
-
-\subsection{Data conversion for compatibility with DALI}
-The initial dataset used for CHeSS training is the same dataset we discuss earlier (\ref{dataset}). An essential step in preparing dataset for our analysis involves converting the data \cite{sdo} files from '.npz' format to '.npy' format. This is primarily to ensure compatibility with the DALI processing framework, which is a core part of our experiments. The original ".npz" files remain intact in the same directory, thus enabling FITSIO operations - and consequently CHeSS training on the ".npz" files to be able to compare the creation time of the two models.
-
-The integration of DALI into the CHeSS codebase involved replacing the TensorFlow Dataset API with DALI's readers, particularly the `readers.FITS` for handling FITS files, `readers.Numpy` for processing `.npy` files, and augmenting operations such as resizing. In addition, we introduced command-line flags to the CHeSS code to facilitate optional utilization of DALI and the selection between CPU and GPU for data handling. Specifically, the `--use\_dali` flag was introduced to switch to using DALI for data handling. To further specify the hardware preference, the `--GPU` flag can be added alongside the `--use\_dali` flag to indicate GPU usage for data handling. It's important to note that the `--GPU` flag is dependent on the `--use\_dali` flag, meaning it can only be used when DALI is activated.
-
-\subsection{Re-evaluating the data processing efficiency in CHeSS with enhanced DALI integration}
-While the dataset was initially used to train the CHeSS model, the focus in this context of integration and performance benchmarking was not the training results. Instead, we focused on the execution times, comparing the computational efficiency of the original CHeSS code (without DALI) and the DALI-integrated CHeSS code (with DALI). This comparison allowed us to quantify the impact of DALI integration on the performance of the CHeSS model, specifically in terms of how quickly it can handle and process the vast dataset.
-
-In essence, the integration of DALI into CHeSS is not just a mere addition of a library. It's a strategic move to leverage the power of modern GPUs, optimize data handling, and ultimately expedite the training process. This integration and its performance implications are further scrutinized in the performance benchmarking section.
-
-\subsection{Configurations for performance benchmarking of the CHeSS model}
-
-The performance of the CHeSS model was benchmarked under four distinct configurations, each designed to test a specific aspect of the training process. These configurations can be briefly described as follows:
+The integration of DALI into the CHeSS codebase replaced the TensorFlow Dataset API with DALI's readers.FITS and readers.Numpy for handling FITS and .npy files respectively, and applying operations like resizing. We introduced command-line flags --use\_dali and --GPU to the CHeSS code, enabling optional utilization of DALI and the selection between CPU and GPU for data handling. Integration performance was evaluated by comparing the results of two configurations:
 \begin{itemize}
-    \item Training the model in the same manner as the original authors of the CHeSS project \cite{CHeSS}, employing a CPU for data handling and processing. This establishes our baseline for subsequent comparisons.
-    \item The training process is modified by incorporating our DALI-implemented functionality for FITS file handling, while still using the CPU. This configuration allows us to assess the impact of our enhancements to DALI on the CPU-bound performance (--use\_dali).
-    \item The original CHeSS training process is repeated \cite{CHeSS}, but this time leveraging a GPU for data handling and processing. This serves as the baseline for GPU-focused comparisons.
-    \item Finally, the training process is adjusted once again to use our DALI-enhanced FITS file handling, this time in conjunction with GPU utilization. This enables us to gauge the impact of our DALI enhancements in a GPU-oriented context (--use\_dali --GPU).
+\item Original Implementation: This replicates the training methodology used by the original authors of the CHeSS project, employing the fitsio library and TensorFlow with data preprocessing handled on the CPU and model training executed on the GPU. This scenario serves as the baseline for subsequent comparisons.
+\item DALI-Accelerated GPU Implementation: In this configuration, we introduced our DALI-enhanced functionality for FITS file handling and moved both data preprocessing and model training to the GPU. This setup allows us to assess the impact of our DALI integration in a GPU-oriented context, specifically using our accelerated decompression algorithm.
 \end{itemize}
-    
 
-As we noted earlier, in each of these scenarios, the focus was not on the actual training results, but rather on the execution times. This approach allowed us to quantify the effect of DALI integration on the efficiency and speed of the CHeSS model, and the implications of this are discussed in more detail in the performance benchmarking section.
+In both configurations, we adopted the following hyperparameters: a batch size of 4, which provided satisfactory results, and 10 epochs, aligning with the original approach. This ensured a consistent testing environment across both setups.
 
+The primary metric for this performance comparison was execution time, rather than training results. We were particularly interested in comparing the runtimes of the CHeSS code with and without the --use\_dali flag. This comparison was intended to show the effectiveness of DALI integration in terms of performance and speed of operations, providing insight into the potential benefits of DALI for similar projects.
 
-
-\subsection{Evaluating the performance of CHeSS code with and without DALI integration}
-
-This part of our performance assessment focused on the integration of DALI into the CHeSS code, examining how the introduction of DALI influenced the code's performance. This segment provided insights into how effectively DALI could improve the efficiency of existing code, offering a realistic scenario of DALI's potential impact on similar projects.
-
-In this part of the benchmark, we compared the runtimes of CHeSS with and without the --use\_dali flag. This flag in the CHeSS code signifies whether to use DALI for data loading and preprocessing or not. This way, we could directly measure the influence of DALI's integration on the efficiency and speed of the operations.
+\subsection{Results}
 
 The results from the GPU tests demonstrated DALI's proficiency in reducing execution times. The execution time of CHeSS code with DALI for a batch size of 4 was found to be 482.97 s, what was approximately 142.6 seconds faster than without DALI on the GPU, a substantial difference considering the nature of tasks performed. This performance enhancement was not limited to GPU tests (figure \ref{CHeSS}). 
 
 Preliminary results from the CPU tests also showed an approximated 30\% performance enhancement with the integration of DALI (table \ref{CHeSS}).
 
-%TODO: zmienic na prawdziwe dane o CPU
+
+
+% 
+
+
 \renewcommand{\arraystretch}{2}
 \begin{table}[H]
     \centering
     \begin{tabular}{|c|c|c|}
         \hline
-        & CPU & GPU \\\hline
-        Time for DALI (\textit{s}) & TODO & 483 \\\hline
-        Time for FITSIO (\textit{s}) & TODO & 626  \\\hline
-        Time saved by DALI (\textit{s}) & TODO & 143  \\\hline
-        Speedup factor with DALI & TODO & 1.3  \\\hline
+        & Original & DALI accelerated (GPU) \\\hline
+        Time (\textit{s}) & 658 & 483  \\\hline
     \end{tabular}
     \caption{\label{CHeSS} Performance of CHeSS code with and without DALI (Batch size 4)}
 \end{table}
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{nvidia-template.png}
+\caption{\label{application-results}Results of Application Benchmarks}
+\end{figure}
+
 
 Overall, the benchmarking phase provided compelling evidence for the effectiveness of DALI's integration into the CHeSS code, and the performance enhancements realized from this integration underline DALI's potential benefits for similar projects in the future.
 
-\section{Discussion}
-
-In the GPU vs CPU comparison, the considerable superiority of the GPU demonstrates the potential gains from hardware acceleration. Using DALI's readers.FITS, we saw the GPU achieving a throughput rate over ten times higher than the CPU, with significantly lower latency and total time. This stark contrast underscores the importance of hardware considerations in deep learning and data-intensive projects. It also spotlights DALI's adeptness at exploiting the strengths of GPU processing to optimize computational tasks.
-
-The results of comparative tests of DALI integration with CHeSS clearly show a significant increase in performance and efficiency. DALI's usefulness is evident in its ability to accelerate data loading a in both CPU and GPU environments. 
-Performance gains of around TODO\% in CPU tests and significant time savings on the GPU highlight the role of DALI in data-intensive tasks.  These performance gains have a significant impact on the implementation of deep learning projects, especially those dealing with extensive and complex datasets such as solar observations recorded by SDO. Faster data processing and model learning times allow for more iterations of model testing and refinement. These increased computational capabilities facilitate more in-depth investigations of solar physics phenomena and faster responses to solar events.
 
 \section{Analysis of results}
 
-In the continuously evolving field of solar physics, computational efficiency is paramount. The analysis and interpretation of extensive datasets, such as those provided by the SDO, demand robust and efficient tools. The integration of NVIDIA's DALI into the CHeSS code is a significant stride in meeting these demands.
+This section provides an analysis and summary of the results obtained from our experimental evaluation, where we compared the performance of data processing with DALI integrated into the processing pipeline. 
 
-The enhancements in data loading and preprocessing times demonstrated by DALI integration enable researchers to process greater volumes of data and refine their models more accurately and swiftly. This efficiency is not just a measure of speed but a tool to facilitate more significant scientific insights. By expediting computational tasks, researchers can focus more on the analysis and interpretation of results, paving the way for advancements in our understanding of the Sun.
+In our synthetic benchmark tests, we observed a notable performance difference between using the CPU and the GPU. The GPU outperformed the CPU by a significant margin, achieving a much higher throughput (files processed per second) and much lower latency (time taken to process each file). This highlights the benefits of using GPU-accelerated processing when dealing with large and complex datasets.
 
-In light of these results, the incorporation of DALI into deep learning pipelines, as illustrated with the CHeSS code, can be seen as a crucial tool for researchers dealing with vast and complex astronomical datasets. As we continue to generate and gather more extensive solar datasets, tools like DALI will be instrumental in handling the computational challenges that arise. Through this, we can continue to progress in our understanding of the Sun and its phenomena, shedding light on the mysteries of our closest star.
+In the application benchmark tests, we compared the performance of the CHeSS model when trained with the original data handling pipeline and with our DALI-enhanced pipeline. We found that the integration of DALI into CHeSS is a strategic move to leverage the power of modern GPUs, optimize data handling, and ultimately expedite the training process. 
 
-%TODO: dodac zrodał danych
 
-\chapter{Conclusion}
+In light of these results, the incorporation of DALI into deep learning pipelines, as illustrated with the CHeSS code, can be seen as a crucial tool for researchers dealing with vast and complex astronomical datasets. As we continue to generate and gather more extensive solar datasets, tools like DALI will be useful in handling the computational challenges that arise. 
+
+\chapter{Conclusion}\label{r:conclusion}
+
 \section{Summary of findings}
 \section{Contributions}
 \section{Future work}
@@ -740,7 +743,10 @@ Authors’ contributions to the project were as following:
 
     \item Magdalena Pałkus 
     \begin{itemize}
-        \item  Initial implementation of FITS Reader CPU
+        \item  Initial implementation of FITS 
+        Reader CPU
+        \item  Implementation and execution of Synthetic Benchmarks 
+        \item Implementation and execution of Application Benchmarks 
     \end{itemize}    
 
     \item Michał Skwarek 
@@ -760,6 +766,10 @@ Authors’ contributions to the project were as following:
 
         \bibitem{rice-basics} {Rice lossless algorithm},
         \url{https://www.irjet.net/archives/V3/i2/IRJET-V3I2267.pdf} 4.05.2023
+
+        \bibitem{sdo-data} {The Atmospheric Imaging Assembly (AIA) on the Solar Dynamics Observatory (SDO)},
+        \url{https://link.springer.com/article/10.1007/s11207-011-9776-8} 8.06.2023
+
 
         \bibitem{fits-official} {FITS documentation},
         \url{https://fits.gsfc.nasa.gov/fits_documentation.html} 4.05.2023
@@ -827,6 +837,13 @@ Authors’ contributions to the project were as following:
         \bibitem{cuda-toolkit-official} {CUDA toolkit},
         \url{https://developer.nvidia.com/cuda-toolkit} 4.05.2023
 
+        \bibitem{async-mem-blog} {CUDA toolkit},
+        \url{https://developer.nvidia.com/blog/how-overlap-data-transfers-cuda-cc/} 9.06.2023
+
+        \bibitem{cuda-wikipedia} {CUDA toolkit},
+        \url{https://en.wikipedia.org/wiki/CUDA#Programming_abilities} 9.06.2023
+        
+
         \bibitem{fits-working-group} {FITS Working Group},
         \url{https://fits.gsfc.nasa.gov/iaufwg/} 4.05.2023
 
@@ -839,6 +856,9 @@ Authors’ contributions to the project were as following:
         \bibitem{golomb-wikipedia} {Golomb wikipedia},
         \url{https://en.wikipedia.org/wiki/Golomb_coding} 4.05.2023
 
+        
+        \bibitem{fitsreader-docs} {Documentation for the FitsReader operator},
+        \url{https://docs.nvidia.com/deeplearning/dali/user-guide/docs/operations/nvidia.dali.fn.experimental.readers.fits.html#nvidia.dali.fn.experimental.readers.fits} 8.06.2023
         
 
         \bibitem{fits-standard} {FITS stanard},
@@ -861,11 +881,45 @@ Authors’ contributions to the project were as following:
         \bibitem{dali} DALI,
         \url{https://developer.nvidia.com/dali} 4.05.2023
 
+        \bibitem{pinned_memory} How to optimize data transfers in CUDA,
+        \url{https://developer.nvidia.com/blog/how-optimize-data-transfers-cuda-cc/} 9.06.2023
+
+        \bibitem{titan-v} TITAN V specification,
+        \url{https://www.techpowerup.com/gpu-specs/titan-v.c3051} 9.06.2023    
+
+        
+        
+        % graphs that show how how big writes boost bandwith; although this saturates at 2^16B
+        % also info about NVLink and other data transfer solutions and their perf; 
+        \bibitem{gpu-interconnect} Evaluating Modern GPU Interconnect,
+        \url{https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8763922} 9.06.2023
+
+        % source for info data data transfers are the major problem
+        \bibitem{gpu-bottelnecks} Graph processing on GPUs: Where are the bottlenecks?,
+        \url{https://ieeexplore.ieee.org/abstract/document/6983053} 10.09.2023
+
+        \bibitem{pcie}  Understanding PCIe performance for end host networking
+        \url{https://dl.acm.org/doi/abs/10.1145/3230543.3230560}, 10.09.2023
+
+        \bibitem{pinned_comparison} Comparing unified, pinned, and host/device memory allocations for memory-intensive workloads on Tegra SoC \url{https://onlinelibrary.wiley.com/doi/epdf/10.1002/cpe.6018} 12.09.2023
+
         \bibitem{sdo} {SDO AIA Coronal Hole dataset},
         \url{https://rattie.orc.gmu.edu/nextcloud/index.php/s/NpoiranMBaBSgj5}
 
         \bibitem{CHeSS}{CHeSS: Coronal Hole Semantic Segmentation},
         \url{https://github.com/raphael-attie/CHeSS}
+
+        \bibitem{coronal-holes}{Description of coronal holes.},
+        \url{https://www.swpc.noaa.gov/phenomena/coronal-holes}
+        
+        \bibitem{titan}{Description of GPU used for testing}
+        \url{https://www.nvidia.com/en-us/titan/titan-v/}
+
+        \bibitem{intel}{Description of CPU used for testing}
+        \url{https://www.intel.pl/content/www/pl/pl/products/sku/198012/intel-core-i910920x-xseries-processor-19-25m-cache-3-50-ghz/specifications.html}
+
+        \bibitem{sdo-photos}{The Active Sun from SDO: 193 Angstroms}
+        \url{https://svs.gsfc.nasa.gov/3981}
         % DALI section: 
         
         
